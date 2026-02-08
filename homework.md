@@ -1,0 +1,3 @@
+-create a repo
+-initialise the repo
+-node_modules , package.json , package
