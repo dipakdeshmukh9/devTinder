@@ -6,6 +6,8 @@ const { validateSignupData } = require("./utils/validation");
 const bycrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const {userAuth} = require("./middlewares/auth");
+
 
 app.use(express.json());
 app.use(cookieParser());
@@ -42,12 +44,14 @@ app.post("/login" , async (req , res) => {
         throw new Error("Invalid Credentials");
     }
 
-    const isPasswordValid = await bycrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
 
     if (isPasswordValid) {
 
-        const token = await jwt.sign({ _id: user._id} , "DEV@Tinder$790");
-        res.cookie("token", token);
+        const token = await user.getJWT();
+        res.cookie("token", token , {
+            expires: new Date(Date.now() + 8 * 3600000), // 7 days
+        });
         res.send("Login successful");
     } else {
         throw new Error("Invalid Credentials");
@@ -58,25 +62,9 @@ app.post("/login" , async (req , res) => {
 }
 });
 
-app.get("/profile" , async (req , res) => {
+app.get("/profile" , userAuth , async (req , res) => {
     try{
-    const cookies = req.cookies;
-
-    const {token} = cookies;
-    if(!token){
-        throw new Error("No token found in cookies");
-    }
-
-    const decodedMessage = await jwt.verify(token , "DEV@Tinder$790");
-
-    const {_id} = decodedMessage;
-    
-
-    const user = await User.findById(_id);
-
-    if(!user){
-        throw new Error("User not found");
-    }
+    const user = req.user;
 
     res.send(user);
 
@@ -85,7 +73,15 @@ app.get("/profile" , async (req , res) => {
 }
 });
 
-app.get("/user" , async (req , res) => {
+app.post("/sendConnectionRequest", userAuth , async (req , res) => {
+      const user = req.user;
+      console.log(user);
+       console.log("sending connection request...");
+     
+       res.send( "Connection Request Send!");
+});
+
+app.get("/user"  , async (req , res) => {
     const userEmail = req.body.emailId;
     try{
         console.log(userEmail);
