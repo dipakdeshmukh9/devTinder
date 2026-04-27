@@ -75,73 +75,11 @@ app.get("/profile" , userAuth , async (req , res) => {
 
 app.post("/sendConnectionRequest", userAuth , async (req , res) => {
       const user = req.user;
-      console.log(user);
        console.log("sending connection request...");
      
-       res.send( "Connection Request Send!");
+       res.send( user.firstName + "Connection Request Send!");
 });
 
-app.get("/user"  , async (req , res) => {
-    const userEmail = req.body.emailId;
-    try{
-        console.log(userEmail);
-        const user = await User.findOne({});
-        // if(user.length === 0){
-        //     return res.status(404).send("User not found");
-        // }else{
-            res.send(user);
-        // }
-
-    }catch(err){
-        res.status(400).send("Something Went Wrong");
-    }
-})
-
-app.delete("/user" , async (req , res) => {
-
-   const userId =  req.body.userId;
-  try{
- const user = await User.findByIdAndDelete(userId);
-  res.end("user deleted successfully...")
-  }
-  catch (err) {
-   res.status(400).send("something went wrong :" );
-  }
-})
-
-app.patch("/user/:userId" , async (req , res) => {
-
-   const userId =  req.params?.userId;
-   const data = req.body;
-  try{
-    const ALLOWED_UPDATES = ["photoUrl" , "about" , "gender" , "age" , "skills"];
-    const isUpdateAllowed = Object.keys(data).every((k) =>
-         ALLOWED_UPDATES.includes(k));
-    if (!isUpdateAllowed) {
-        return res.status(400).send("Invalid update fields");
-    }
-    if(data?.skills.length > 10){
-    throw new Error("Skills cannot be more than 10");
-    }
- const user = await User.findByIdAndUpdate({ _id: userId } , data , {
-        returnDocument: "after",
-        runValidators: true,
-    });
-  res.send("user udated successfully...");
-  }
-  catch (err) {
-   res.status(400).send("Update failed :" + err.message);
-  }
-})
-
-app.get("/feed" , async (req , res) => {
-    try{
-        const users = await User.find({});
-        res.send(users);
-    }catch(err){
-        res.status(400).send("Something Went Wrong");
-    }
-});
 
 connectDB().then(() => {
     console.log("Database connected successfully");
